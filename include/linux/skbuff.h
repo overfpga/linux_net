@@ -291,8 +291,8 @@ struct sk_buff_head {
 	struct sk_buff	*next;
 	struct sk_buff	*prev;
 
-	__u32		qlen;
-	spinlock_t	lock;
+	__u32		qlen; /*链表中节点数，即队列长度*/
+	spinlock_t	lock; /*并发操作的自旋锁*/
 };
 
 struct sk_buff;
@@ -690,7 +690,7 @@ struct sk_buff {
 			struct sk_buff		*prev;
 
 			union {
-				struct net_device	*dev;
+				struct net_device	*dev; /*网络设备指针*/
 				/* Some protocols might use this space to store information,
 				 * while device pointer would be NULL.
 				 * UDP receive path is one user.
@@ -703,12 +703,12 @@ struct sk_buff {
 	};
 
 	union {
-		struct sock		*sk;
+		struct sock		*sk; /*宿主传输控制块，在网络报文由本地发出或由本地接收才有效，当一个SKB仅在二层或三层被转发时，即源IP地址和目的IP地址都不是本机地址时，指针值为NULL*/
 		int			ip_defrag_offset;
 	};
 
 	union {
-		ktime_t		tstamp;
+		ktime_t		tstamp;/*arrived/left时间搓，通过netif_receive_skb或netif_rx调用net_timestamp进行设置时间戳*/
 		u64		skb_mstamp_ns; /* earliest departure time */
 	};
 	/*
@@ -717,12 +717,12 @@ struct sk_buff {
 	 * want to keep them across layers you have to do a skb_clone()
 	 * first. This is owned by whoever has the skb queued ATM.
 	 */
-	char			cb[48] __aligned(8);
+	char			cb[48] __aligned(8); /*SKB信息控制块，是没层协议的私有信息存储空间，由每一层自己维护并使用，并只在本层有效，tcp_transmit_skb函数使用*/
 
 	union {
 		struct {
-			unsigned long	_skb_refdst;
-			void		(*destructor)(struct sk_buff *skb);
+			unsigned long	_skb_refdst;/*目的路由缓存项*/
+			void		(*destructor)(struct sk_buff *skb);/*由skb_set_owner_r和skb_set_owner_w初始化成sock_free或sock_wfree*/
 		};
 		struct list_head	tcp_tsorted_anchor;
 	};
@@ -730,9 +730,9 @@ struct sk_buff {
 #if defined(CONFIG_NF_CONNTRACK) || defined(CONFIG_NF_CONNTRACK_MODULE)
 	unsigned long		 _nfct;
 #endif
-	unsigned int		len,
-				data_len;
-	__u16			mac_len,
+	unsigned int		len, /*SKB中数据部分长度（包含首部长度）*/
+				data_len; /*SG类型和FRAGLIST类型聚合分散I/O存储区中的数据长度*/
+	__u16			mac_len, /*二层首部长度，实际长度与网络介质相关，在以太网中为以太网帧首部的长度*/
 				hdr_len;
 
 	/* Following fields are _not_ copied in __copy_skb_header()
@@ -749,7 +749,7 @@ struct sk_buff {
 #define CLONED_OFFSET()		offsetof(struct sk_buff, __cloned_offset)
 
 	__u8			__cloned_offset[0];
-	__u8			cloned:1,
+	__u8			cloned:1, /*SKB是否已经克隆*/
 				nohdr:1,
 				fclone:2,
 				peeked:1,
@@ -774,7 +774,7 @@ struct sk_buff {
 #define PKT_TYPE_OFFSET()	offsetof(struct sk_buff, __pkt_type_offset)
 
 	__u8			__pkt_type_offset[0];
-	__u8			pkt_type:3;
+	__u8			pkt_type:3; /*桢类型，帧分类是由二层目的地址来决定的 */
 	__u8			ignore_df:1;
 	__u8			nf_trace:1;
 	__u8			ip_summed:2;
@@ -834,7 +834,7 @@ struct sk_buff {
 			__u16	csum_offset;
 		};
 	};
-	__u32			priority;
+	__u32			priority; /*发送或转发数据包Qos类别，如果包是本地生成的，套接口会设置该字段，如果包是转发的，则rt_tos2priority会根据IP首部中TOS域来计算该字段值*/
 	int			skb_iif;
 	__u32			hash;
 	__be16			vlan_proto;
@@ -863,7 +863,7 @@ struct sk_buff {
 	__u16			inner_network_header;
 	__u16			inner_mac_header;
 
-	__be16			protocol;
+	__be16			protocol; /*从二层设备角度看到的上层协议，即链路层承载的三层协议类型*/
 	__u16			transport_header;
 	__u16			network_header;
 	__u16			mac_header;
@@ -877,8 +877,8 @@ struct sk_buff {
 	sk_buff_data_t		end;
 	unsigned char		*head,
 				*data;
-	unsigned int		truesize;
-	refcount_t		users;
+	unsigned int		truesize;/*整个数据存储区的长度，size（sk_buff） + data缓存区部分*/
+	refcount_t		users; /*引用计数，标识有多少实体引用了该SKB，其主要作用是确定释放所属SKB的时机*/
 
 #ifdef CONFIG_SKB_EXTENSIONS
 	/* only useable after checking ->active_extensions != 0 */
