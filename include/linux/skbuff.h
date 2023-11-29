@@ -307,7 +307,7 @@ struct sk_buff;
 #if (65536/PAGE_SIZE + 1) < 16
 #define MAX_SKB_FRAGS 16UL
 #else
-#define MAX_SKB_FRAGS (65536/PAGE_SIZE + 1)
+#define MAX_SKB_FRAGS (65536/PAGE_SIZE + 1) /*frags数组的大小，最多支持64K个分片大小*/
 #endif
 extern int sysctl_max_skb_frags;
 
@@ -507,15 +507,17 @@ int skb_zerocopy_iter_stream(struct sock *sk, struct sk_buff *skb,
 /* This data is invariant across clones and lives at
  * the end of the header data, ie. at skb->end.
  */
+/*在缓存区的末尾，保存了数据库附加信息*/
+/*分片是由skb_shared_info的nr_flags和flag_list控制，nr_flags为0，flag_list为NULL，说明报文没有分片*/
 struct skb_shared_info {
 	__u8		__unused;
 	__u8		meta_len;
-	__u8		nr_frags;
+	__u8		nr_frags; /*分片数量，如果nr_frags大于0，且frag_list为NULL，则是聚合I/O*/
 	__u8		tx_flags;
 	unsigned short	gso_size;
 	/* Warning: this field is not always filled in (UFO)! */
 	unsigned short	gso_segs;
-	struct sk_buff	*frag_list;
+	struct sk_buff	*frag_list; /*1.用于在接收分片组后，连接多个分片，组成一个完整的数据报，2.在UDP数据包的输出中，将待分片的SKB链接到第一个SKB中，然后在输出过程中能够快速地分片 3.用于存放FRAGLIST类型的聚合分散I/O的数据包*/
 	struct skb_shared_hwtstamps hwtstamps;
 	unsigned int	gso_type;
 	u32		tskey;
@@ -523,14 +525,14 @@ struct skb_shared_info {
 	/*
 	 * Warning : all fields before dataref are cleared in __alloc_skb()
 	 */
-	atomic_t	dataref;
+	atomic_t	dataref; /*引用计数器，当一个数据缓冲区被多个SKB的描述符引用时，就会设置相应的计数，比如克隆*/
 
 	/* Intermediate layers must ensure that destructor_arg
 	 * remains valid until skb destructor */
 	void *		destructor_arg;
 
 	/* must be last field, see pskb_expand_head() */
-	skb_frag_t	frags[MAX_SKB_FRAGS];
+	skb_frag_t	frags[MAX_SKB_FRAGS]; /*用于支持SG类型的聚合分散I/O分片*/
 };
 
 /* We divide dataref into two halves.  The higher 16 bits hold references
@@ -728,7 +730,7 @@ struct sk_buff {
 	};
 
 #if defined(CONFIG_NF_CONNTRACK) || defined(CONFIG_NF_CONNTRACK_MODULE)
-	unsigned long		 _nfct;
+	unsigned long		 _nfct;  /*netfilter(防火墙)使用的时候才有效*/
 #endif
 	unsigned int		len, /*SKB中数据部分长度（包含首部长度）*/
 				data_len; /*SG类型和FRAGLIST类型聚合分散I/O存储区中的数据长度*/
@@ -750,8 +752,8 @@ struct sk_buff {
 
 	__u8			__cloned_offset[0];
 	__u8			cloned:1, /*SKB是否已经克隆*/
-				nohdr:1,
-				fclone:2,
+				nohdr:1,	/*标识payload是否被单独引用，不存在协议首部*/
+				fclone:2,	/*当前克隆状态*/
 				peeked:1,
 				head_frag:1,
 				pfmemalloc:1;
@@ -824,7 +826,7 @@ struct sk_buff {
 #endif
 
 #ifdef CONFIG_NET_SCHED
-	__u16			tc_index;	/* traffic control index */
+	__u16			tc_index;	/* traffic control index */ /*输入流量控制*/
 #endif
 
 	union {

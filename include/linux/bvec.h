@@ -15,10 +15,11 @@
 /*
  * was unsigned short, but we might as well be ready for > 64kB I/O pages
  */
+/*聚合I/O*/
 struct bio_vec {
-	struct page	*bv_page;
-	unsigned int	bv_len;
-	unsigned int	bv_offset;
+	struct page	*bv_page; /*指向文件系统缓存页的指针*/
+	unsigned int	bv_len; /*数据在文件系统缓存页面中使用的长度*/
+	unsigned int	bv_offset; /*数据起始地址在文件系统缓存页中的偏移*/
 };
 
 struct bvec_iter {
