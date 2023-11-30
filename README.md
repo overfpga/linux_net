@@ -25,8 +25,7 @@ alloc_skb 分配SKB, 数据缓存区和SKB描述符是两个不同的实体，�
 
 dev_alloc_skb ： 也是一个缓存区分配函数，通常被设备驱动用在中断上下文，这是一个alloc_skb的封装函数，（原子操作）
 
-释放SKB
-
+    释放SKB
     dev_kfree_skb 和 kfree_skb
     dev_kfree_skb是kfree_skb的宏，dev_kfree_skb一般为设备驱动使用 ，只有在SKB引用为1时，调用释放函数才会释放缓存区。
 
@@ -44,7 +43,7 @@ dev_alloc_skb ： 也是一个缓存区分配函数，通常被设备驱动用�
 
 
 
-#skb链表操作函数
+# skb链表操作函数
     skb_queue_head_init ： 初始化SKB链表头节点，并创建一个空的SKB链表
 
     skb_queue_head和skb_queue_tail ： 将一个SKB加入到队列的头部和尾部
@@ -55,7 +54,7 @@ dev_alloc_skb ： 也是一个缓存区分配函数，通常被设备驱动用�
 
     skb_queue_walk 宏 ： 定义一个for语句，用来按顺序遍历SKB链表中的每一个元素
 
-#添加或删除尾部数据
+# 添加或删除尾部数据
     skb_add_data ：将指定用户空间的数据添加到SKB的数据缓存区的尾部
 
     skb_trim ： 根据指定长度删除SKB的数据缓存区尾部的数据
