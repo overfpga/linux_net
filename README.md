@@ -84,3 +84,9 @@
     skb_pagelen : 获取SKB中线性数据区和SG类型的聚合分散I/O分片中数据的长度
 ​​​
 
+
+# 网络设备处理层初始化
+
+    net_dev_init
+
+    e100_init_module

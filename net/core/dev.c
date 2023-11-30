@@ -10392,7 +10392,7 @@ static int __init net_dev_init(void)
 
 	BUG_ON(!dev_boot_phase);
 
-	if (dev_proc_init())
+	if (dev_proc_init()) /*在proc文件系统中注册/proc/net/dev和/proc/net/softnet_stat文件,这两个文件是只读的,主要针对网络设备的状态和一些数据的统计*/
 		goto out;
 
 	if (netdev_kobject_init())
