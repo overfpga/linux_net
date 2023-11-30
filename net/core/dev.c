@@ -10395,12 +10395,12 @@ static int __init net_dev_init(void)
 	if (dev_proc_init()) /*在proc文件系统中注册/proc/net/dev和/proc/net/softnet_stat文件,这两个文件是只读的,主要针对网络设备的状态和一些数据的统计*/
 		goto out;
 
-	if (netdev_kobject_init())
+	if (netdev_kobject_init()) /*在设备文件系统的class中注册net节点*/
 		goto out;
 
 	INIT_LIST_HEAD(&ptype_all);
-	for (i = 0; i < PTYPE_HASH_SIZE; i++)
-		INIT_LIST_HEAD(&ptype_base[i]);
+	for (i = 0; i < PTYPE_HASH_SIZE; i++) /*初始化网络函数散列表ptype_base,这些处理函数处理接收到的不同协议族报文*/
+		INIT_LIST_HEAD(& [i]);
 
 	INIT_LIST_HEAD(&offload_base);
 
@@ -10410,8 +10410,8 @@ static int __init net_dev_init(void)
 	/*
 	 *	Initialise the packet receive queues.
 	 */
-
-	for_each_possible_cpu(i) {
+/*初始化cpu相关的接收队列*/
+	for_each_possible_cpu(i) {  
 		struct work_struct *flush = per_cpu_ptr(&flush_works, i);
 		struct softnet_data *sd = &per_cpu(softnet_data, i);
 
@@ -10434,8 +10434,8 @@ static int __init net_dev_init(void)
 		sd->backlog.poll = process_backlog;
 		sd->backlog.weight = weight_p;
 	}
-
-	dev_boot_phase = 0;
+	/*标识设备层初始化已经完成*/
+	dev_boot_phase = 0;	
 
 	/* The loopback device is special if any other network devices
 	 * is present in a network namespace the loopback device must
@@ -10451,8 +10451,8 @@ static int __init net_dev_init(void)
 
 	if (register_pernet_device(&default_device_ops))
 		goto out;
-
-	open_softirq(NET_TX_SOFTIRQ, net_tx_action);
+	/*在软中断系统中注册两个软中断NET_TX_SOFTIRQ和NET_RX_SOFTIRQ,用于网络设备的发送和接收*/
+	open_softirq(NET_TX_SOFTIRQ, net_tx_action);    
 	open_softirq(NET_RX_SOFTIRQ, net_rx_action);
 
 	rc = cpuhp_setup_state_nocalls(CPUHP_NET_DEV_DEAD, "net/dev:dead",
