@@ -2,28 +2,28 @@
 
 
 
+# skb 初始函数
+    skb 初始函数   skb_init函数创建skb描述符 ， 有两个原来分配SKB描述的高速缓存,一般情况skb描述符都是从skbuff_head_cache高速缓存创建,skbuff_fclone_cache以两倍SKB描述符创建
+    void __init skb_init(void)
+    {
+        skbuff_head_cache = kmem_cache_create_usercopy("skbuff_head_cache",
+                            sizeof(struct sk_buff),
+                            0,
+                            SLAB_HWCACHE_ALIGN|SLAB_PANIC,
+                            offsetof(struct sk_buff, cb),  
+                            sizeof_field(struct sk_buff, cb),
+                            NULL);
+        skbuff_fclone_cache = kmem_cache_create("skbuff_fclone_cache",
+                            sizeof(struct sk_buff_fclones),
+                            0,
+                            SLAB_HWCACHE_ALIGN|SLAB_PANIC,
+                            NULL);
+        skb_extensions_init();
+    }
 
-skb 初始函数   skb_init函数创建skb描述符 ， 有两个原来分配SKB描述的高速缓存,一般情况skb描述符都是从skbuff_head_cache高速缓存创建,skbuff_fclone_cache以两倍SKB描述符创建
-void __init skb_init(void)
-{
-    skbuff_head_cache = kmem_cache_create_usercopy("skbuff_head_cache",
-                          sizeof(struct sk_buff),
-                          0,
-                          SLAB_HWCACHE_ALIGN|SLAB_PANIC,
-                          offsetof(struct sk_buff, cb),  
-                          sizeof_field(struct sk_buff, cb),
-                          NULL);
-    skbuff_fclone_cache = kmem_cache_create("skbuff_fclone_cache",
-                        sizeof(struct sk_buff_fclones),
-                        0,
-                        SLAB_HWCACHE_ALIGN|SLAB_PANIC,
-                        NULL);
-    skb_extensions_init();
-}
+    alloc_skb 分配SKB, 数据缓存区和SKB描述符是两个不同的实体，意味着，在分配一个SKB时，需要分配两块内存，一块时数据缓存区，一块是数据描述符,_alloc_skb调用kmem_cache_alloc_node从告诉 缓存中获取一个sk_buff结构空间,然后调用kmalloc_reserve分配数据缓存区
 
-alloc_skb 分配SKB, 数据缓存区和SKB描述符是两个不同的实体，意味着，在分配一个SKB时，需要分配两块内存，一块时数据缓存区，一块是数据描述符,_alloc_skb调用kmem_cache_alloc_node从告诉 缓存中获取一个sk_buff结构空间,然后调用kmalloc_reserve分配数据缓存区
-
-dev_alloc_skb ： 也是一个缓存区分配函数，通常被设备驱动用在中断上下文，这是一个alloc_skb的封装函数，（原子操作）
+    dev_alloc_skb ： 也是一个缓存区分配函数，通常被设备驱动用在中断上下文，这是一个alloc_skb的封装函数，（原子操作）
 
     释放SKB
     dev_kfree_skb 和 kfree_skb
