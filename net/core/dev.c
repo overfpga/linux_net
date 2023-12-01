@@ -9687,6 +9687,7 @@ void netdev_freemem(struct net_device *dev)
  * and performs basic initialization.  Also allocates subqueue structs
  * for each queue on the device.
  */
+/*为net_device分配空间*/
 struct net_device *alloc_netdev_mqs(int sizeof_priv, const char *name,
 		unsigned char name_assign_type,
 		void (*setup)(struct net_device *),

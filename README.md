@@ -90,3 +90,38 @@
     net_dev_init
 
     e100_init_module
+
+
+# IP函数
+
+
+    inetdev_init : 通过参数指定的网络设备分配并绑定IP配置块
+
+    inetdev_destroy : 在设备注销时被调用,释放指定的IP配置块
+
+    inet_select_addr : 通过输出网络设备向目的地址发送报文时,如果没有指定源地址,会调用inet_select_addr来根据指定设备\目的地址和作用范围,获取给定作用范围内的主IP地址作为源地址.
+
+    inet_confirm_add : 用来确认参数中指定的本地地址是否存在
+
+    inet_addr_onlink : 根据指定网络设备的IP配置块,检查两个给的的IP地址是否同属于一个子网
+
+    inetdev_by_index : 根据网络设备索引号获取对应网络设备的IP配置块
+
+
+    inet_ifa_byprefix : 在正在配置的输入设备的主IP地址中查找与前缀和掩码匹配的IP地址
+
+    inet_abc_len : 根据指定的IP地址获取默认掩码长度
+
+    
+
+
+
+
+
+
+
+
+
+
+
+

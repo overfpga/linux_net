@@ -1795,7 +1795,7 @@ enum netdev_priv_flags {
  */
 
 struct net_device {
-	char			name[IFNAMSIZ];
+	char			name[IFNAMSIZ];  /*网络设备名*/
 	struct netdev_name_node	*name_node;
 	struct dev_ifalias	__rcu *ifalias;
 	/*
